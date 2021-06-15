@@ -1,0 +1,40 @@
+##                      _           _     _
+##   ___  _ __  ___  __| |_ __ ___ (_) __| |
+##  / _ \| '_ \/ __|/ _` | '__/ _ \| |/ _` |
+## | (_) | |_) \__ \ (_| | | | (_) | | (_| |
+##  \___/| .__/|___/\__,_|_|  \___/|_|\__,_|
+##       |_|
+##                   __ _
+##   ___ ___  _ __  / _(_) __ _
+##  / __/ _ \| '_ \| |_| |/ _` |
+## | (_| (_) | | | |  _| | (_| |
+##  \___\___/|_| |_|_| |_|\__, |
+##                        |___/
+##
+## A default config file to use with opsdroid
+
+welcome-message: false
+
+## Connector modules
+connectors:
+#  ## Matrix (core)
+  matrix:
+    # Required
+    mxid: "@questions:server.com"
+    password: ""
+    # A dictionary of multiple rooms
+    # One of these should be named 'main'
+    rooms:
+      'main': '#Questions:server.com'
+    homeserver: "https://server.com"
+    nick: "Questions"  # The nick will be set on startup
+    room_specific_nicks: False  # Look up room specific nicknames of senders (expensive in large rooms)
+    enable_encryption: True
+    device_name: "opsdroid"
+    device_id: "" # A unique string to use as an ID for a persistent opsdroid device
+    store_path: "/root/.config/opsdroid/Matrix_cache/" # Path to the directory where the matrix store will be saved
+
+skills:
+  ANSQuestions:
+    path: /root/.config/opsdroid/Skill/main.py
+    
