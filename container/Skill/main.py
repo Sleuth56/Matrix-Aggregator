@@ -10,7 +10,7 @@ class ANSSkill(Skill):
   def __init__(self, opsdroid, config):
     super().__init__(opsdroid, config)
     self.join_when_invited = config.get("join_when_invited", True)
-    self.logging = False
+    self.logging = True
 
   # Join all rooms on invite.
   @match_event(UserInvite)
@@ -35,7 +35,7 @@ class ANSSkill(Skill):
     # Extra logging for debuging
     if (self.logging == True):
       _LOGGER.info(message.raw_event)
-      _LOGGER.info(type(existing_content))
+      _LOGGER.info(type(content))
 
     # Checks if this message was an edit
     if ("m.relates_to" in message.raw_event['content']):
