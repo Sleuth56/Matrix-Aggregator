@@ -40,7 +40,7 @@ class Aggregator_Skill(Skill):
       for i in range(len(keys)):
         output += f'{messages[keys[i]]}<br>'
       await message.respond(output)
-      await self.opsdroid.send(Message(str(output)))
+      await self.opsdroid.send(Message("I sent your message!"))
       await opsdroid.memory.delete(message.raw_event["room_id"])
 
     elif ("!preview" in string):
