@@ -11,30 +11,33 @@
 ##  \___\___/|_| |_|_| |_|\__, |
 ##                        |___/
 ##
-## A default config file to use with opsdroid
+## The default config file for Matrix Aggregator.
 
-welcome-message: false
-
-## Connector modules
+# Connector modules
 connectors:
-#  ## Matrix (core)
+# Matrix (core)
   matrix:
     # Required
     mxid: "@questions:server.com"
+    homeserver: "https://server.com"
     password: ""
-    # A dictionary of multiple rooms
-    # One of these should be named 'main'
+
+    # You cannot use element for this. 
+    # I recommend using https://github.com/fabianonline/matrix.sh with --login mode to sign in
+    # Then loggin with element to see the other device ID.
+    device_id: ""
     rooms:
       'main': '#Questions:server.com'
-    homeserver: "https://server.com"
-    nick: "Questions"  # The nick will be set on startup
-    room_specific_nicks: False  # Look up room specific nicknames of senders (expensive in large rooms)
+      # 'aditional_room': '#otherroom:server.com'
+      
+    nick: "Questions"  # The nick name for the bot
+    room_specific_nicks: False
     enable_encryption: True
     device_name: "opsdroid"
-    device_id: "" # A unique string to use as an ID for a persistent opsdroid device
-    store_path: "/root/.config/opsdroid/Matrix_cache/" # Path to the directory where the matrix store will be saved
+    store_path: "/root/.config/opsdroid/Matrix_cache/" 
 
 skills:
   ANSQuestions:
     path: /root/.config/opsdroid/Skill/main.py
     
+welcome-message: false
