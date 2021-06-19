@@ -8,6 +8,11 @@
 5. Edit `configuration.yaml` with the rooms to aggregate the messages into.
 6. Start the bot! `docker-compose up -d`
 
+## Known bugs
+- Non-Encrypted rooms key error because room_id isn't passed in to message.raw_event
+- Sometimes rooms can't be found for seemingly no reason when joining an invite
+- 
+
 
 ## Roadmap
 - [x] Edits
