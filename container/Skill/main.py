@@ -10,17 +10,32 @@ class Aggregator_Skill(Skill):
   def __init__(self, opsdroid, config):
     super().__init__(opsdroid, config)
     self.join_when_invited = config.get("join_when_invited", True)
-    self.logging = True
+    self.logging = False
     self.deletion_message = "I deleted your entire message."
     self.sent_successfully_message = "I sent your message!"
     self.nothing_to_send_message = "I don't have anything to send"
     self.nothing_to_preview = "Their isn't anything to preview"
     # self.header_format = f'<h2>{message.user} said </h2>'
-    self.help_message = ("Robot Events Bot help<br>"
-                         "help | shows this help<br>"
-                         "calc skills [red's score] [blue's score] | calculates skills score from field score<br>"
-                         "list teams [event ID] (team number) | get a list of all teams and their info from the given event.<br>"
+    self.help_message = ("<h2>Matrix Aggregator help</h2>"
+                         "just type your messages as you would usually do. "
+                         "As many as you would like in fact.<br>"
+                         "If you would like to preview what you've written type `!preview`<br>"
+                         "When your ready just type `!send`<br>"
+                         "Type help to show this again.<br>"
+                         "If you are totally discusted with what you wrote type `!delete` to errace it from the plannet.<br>"
     )
+
+  def MKToHTML(self, content):
+    if ("```" in content):
+      if (self.logging == True):
+        _LOGGER.info(str(content.split("```")[1]))
+
+
+      code_block = content.split("```")[1].split("```")[0].strip('\n')
+      content = f'{content.split("```")[0]} <pre><code>{code_block}</code></pre> {content.split("```")[2]}'
+
+    return content.replace("\n", "<br>")
+
 
   @match_event(UserInvite)
   async def respond_to_invites(self, opsdroid, config, invite):
@@ -32,7 +47,7 @@ class Aggregator_Skill(Skill):
 
   @match_regex(r'^!help|help', case_sensitive=False)
   async def help_menu(self, opsdroid, config, message):
-    await message.respond("My help message isn't ready yet.")
+    await message.respond(self.MKToHTML(self.help_message))
 
   @match_regex(r'(?P<string>^(?!help|!help)((.|\n)*))', case_sensitive=False)
   async def process_message(self, opsdroid, config, message):
@@ -88,36 +103,21 @@ class Aggregator_Skill(Skill):
       # Extra logging for debuging
       if (self.logging == True):
         _LOGGER.info(message.raw_event)
-        _LOGGER.info(type(content))
 
       # Checks if this message was an edit
-      message_id = None
       if ("m.relates_to" in message.raw_event['content']):
         if (self.logging == True):
           _LOGGER.info("User Message:" + str(message.raw_event['content']['m.new_content']['body']))
 
         # Updates the original message with the edit 
-        content[message.raw_event['content']['m.relates_to']['event_id']] = message.raw_event['content']['m.new_content']['body']
-        message_id = message.raw_event['content']['m.relates_to']['event_id']
+        content[message.raw_event['content']['m.relates_to']['event_id']] = self.MKToHTML(message.raw_event['content']['m.new_content']['body'])
       else:
         # Creates new entry for the message
-        content[message.raw_event["event_id"]] = message.raw_event["content"]["body"]
-        message_id = message.raw_event["event_id"]
+        content[message.raw_event["event_id"]] = self.MKToHTML(message.raw_event["content"]["body"])
 
       # Log check from the dictionary
       if (self.logging == True):
         _LOGGER.info(str(content))
-
-      # Convert MarkDown to HTML
-      if ("```" in content[message_id]):
-        if (self.logging == True):
-          _LOGGER.info(str(content[message_id].split("```")[1]))
-
-        code_block = content[message_id].split("```")[1].split("```")[0].strip('\n')
-        content[message_id] = f'{content[message_id].split("```")[0]} <pre><code>{code_block}</code></pre> {content[message_id].split("```")[2]}'
-        
-      content[message_id] = content[message_id].replace("\n", "<br>")
-
 
       # Store the dictionary as the room id
       await opsdroid.memory.put(message.raw_event["room_id"], content)
