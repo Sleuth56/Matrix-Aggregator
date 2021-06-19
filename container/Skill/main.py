@@ -10,7 +10,17 @@ class Aggregator_Skill(Skill):
   def __init__(self, opsdroid, config):
     super().__init__(opsdroid, config)
     self.join_when_invited = config.get("join_when_invited", True)
-    self.logging = False
+    self.logging = True
+    self.deletion_message = "I deleted your entire message."
+    self.sent_successfully_message = "I sent your message!"
+    self.nothing_to_send_message = "I don't have anything to send"
+    self.nothing_to_preview = "Their isn't anything to preview"
+    # self.header_format = f'<h2>{message.user} said </h2>'
+    self.help_message = ("Robot Events Bot help<br>"
+                         "help | shows this help<br>"
+                         "calc skills [red's score] [blue's score] | calculates skills score from field score<br>"
+                         "list teams [event ID] (team number) | get a list of all teams and their info from the given event.<br>"
+    )
 
   @match_event(UserInvite)
   async def respond_to_invites(self, opsdroid, config, invite):
@@ -21,33 +31,39 @@ class Aggregator_Skill(Skill):
       await invite.respond(JoinRoom())
 
   @match_regex(r'^!help|help', case_sensitive=False)
-  async def help_message(self, opsdroid, config, message):
+  async def help_menu(self, opsdroid, config, message):
     await message.respond("My help message isn't ready yet.")
 
   @match_regex(r'(?P<string>^(?!help|!help)((.|\n)*))', case_sensitive=False)
   async def process_message(self, opsdroid, config, message):
-    _LOGGER.info("match!")
+    if (self.logging == True):
+      _LOGGER.info("matched process_message regex!")
     string = message.regex.group('string')
     if (self.logging == True):
-      _LOGGER.info(str(string))
-    if ("!send" in string):
-      output = f'<h2>{message.user} said</h2>'
+      _LOGGER.info("User Message:" + str(string))
+
+    if ("!delete" in string):
+      await opsdroid.memory.delete(message.raw_event["room_id"])
+      await message.respond(self.deletion_message)
+
+    elif ("!send" in string):
+      output = f'<h2>{message.user} said </h2>'
       messages = await opsdroid.memory.get(message.raw_event["room_id"])
       if (not isinstance(messages, dict)):
-        await message.respond("I don't have anything to send")
+        await message.respond(self.nothing_to_send_message)
         return
       keys = list(messages.keys())
       for i in range(len(keys)):
         output += f'{messages[keys[i]]}<br>'
-      await message.respond(output)
-      await self.opsdroid.send(Message("I sent your message!"))
+      await message.respond(self.sent_successfully_message)
+      await self.opsdroid.send(Message(output))
       await opsdroid.memory.delete(message.raw_event["room_id"])
 
     elif ("!preview" in string):
-      output = f'<h2>{message.user} said</h2>'
+      output = f'<h2>{message.user} said </h2>'
       messages = await opsdroid.memory.get(message.raw_event["room_id"])
       if (not isinstance(messages, dict)):
-        await message.respond("Their isn't anything to preview")
+        await message.respond(self.nothing_to_preview)
         return
       keys = list(messages.keys())
       for i in range(len(keys)):
@@ -58,6 +74,10 @@ class Aggregator_Skill(Skill):
       _LOGGER.info("Bad match help")
 
     else:
+      if (self.logging == True):
+        _LOGGER.info("Message.get = " + str(message.raw_event))
+        _LOGGER.info("opsdroid.memory.get message.raw_event is currently: " + str(await opsdroid.memory.get(message.raw_event["room_id"])))
+
       # Attempts to get the current message state of the room
       content = await opsdroid.memory.get(message.raw_event["room_id"])
 
@@ -71,24 +91,33 @@ class Aggregator_Skill(Skill):
         _LOGGER.info(type(content))
 
       # Checks if this message was an edit
+      message_id = None
       if ("m.relates_to" in message.raw_event['content']):
         if (self.logging == True):
-          _LOGGER.info(str(message.raw_event['content']['m.new_content']['body']))
+          _LOGGER.info("User Message:" + str(message.raw_event['content']['m.new_content']['body']))
 
         # Updates the original message with the edit 
         content[message.raw_event['content']['m.relates_to']['event_id']] = message.raw_event['content']['m.new_content']['body']
+        message_id = message.raw_event['content']['m.relates_to']['event_id']
       else:
-        if (self.logging == True):
-          _LOGGER.info(await opsdroid.memory.get(message.raw_event["room_id"]))
-
         # Creates new entry for the message
         content[message.raw_event["event_id"]] = message.raw_event["content"]["body"]
+        message_id = message.raw_event["event_id"]
 
       # Log check from the dictionary
       if (self.logging == True):
         _LOGGER.info(str(content))
 
-      content[message.raw_event["event_id"]] = content[message.raw_event["event_id"]].replace("\n", "<br>")
+      # Convert MarkDown to HTML
+      if ("```" in content[message_id]):
+        if (self.logging == True):
+          _LOGGER.info(str(content[message_id].split("```")[1]))
+
+        code_block = content[message_id].split("```")[1].split("```")[0].strip('\n')
+        content[message_id] = f'{content[message_id].split("```")[0]} <pre><code>{code_block}</code></pre> {content[message_id].split("```")[2]}'
+        
+      content[message_id] = content[message_id].replace("\n", "<br>")
+
 
       # Store the dictionary as the room id
       await opsdroid.memory.put(message.raw_event["room_id"], content)
