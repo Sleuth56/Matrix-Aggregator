@@ -1,7 +1,7 @@
 # Matrix Aggregator Skill
 
 ## Installation with Docker/Podman
-1. Clone the repo. `git clone https://github.com/Sleuth56/Matrix_Aggregator_Skill.git`
+1. Clone the repo. `git clone https://github.com/Sleuth56/Matrix-Aggregator.git`
 2. change directory into it. `cd Matrix_Aggregator_Skill`
 3. Rename `configuration.yaml.default` to `configuration.yaml`. `mv configuration.yaml.default configuration.yaml`
 4. Make a matrix account on a server. And put the Account name, password, and device ID into the configuration file.
