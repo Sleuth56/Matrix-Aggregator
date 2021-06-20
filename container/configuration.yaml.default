@@ -27,17 +27,25 @@ connectors:
     # Then loggin with element to see the other device ID.
     device_id: ""
     rooms:
-      'main': '#Questions:server.com'
-      # 'aditional_room': '#otherroom:server.com'
+      'main': '#BotAdminRoom:server.com'
       
     nick: "Questions"  # The nick name for the bot
     room_specific_nicks: False
     enable_encryption: True
     device_name: "opsdroid"
-    store_path: "/root/.config/opsdroid/Matrix_cache/" 
+    store_path: "/root/.config/opsdroid/Matrix_cache/"
 
 skills:
   ANSQuestions:
+    # Use the unique room id the one under advanced in room settings in element. It starts with ! symbol.
+    # Use a comma separated list of strings with your room IDs to use multiple destination rooms.
+    destination_rooms: [""]
     path: /root/.config/opsdroid/Skill/main.py
+    logging: False
+    header: "<h2>{user_name} said </h2>"
+    sent_ack: "I sent your message!"
+    delete_message: "I deleted your entire message."
+    nothing_to_send: "I don't have anything to send"
+    nothing_to_preview: "Their isn't anything to preview"
     
 welcome-message: false
