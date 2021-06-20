@@ -14,6 +14,7 @@ class Aggregator_Skill(Skill):
     super().__init__(opsdroid, config)
     self.join_when_invited = config.get("join_when_invited", True)
     self.logging = config.get("logging", False)
+    self.destination_rooms = config.get("destination_rooms", None)
     self.deletion_message = config.get("delete_message", "I deleted your entire message.")
     self.sent_successfully_message = config.get("sent_ack" , "I sent your message!")
     self.nothing_to_send_message = config.get("nothing_to_send", "I don't have anything to send")
@@ -26,6 +27,7 @@ class Aggregator_Skill(Skill):
                          "When your ready just type **!send**\n"
                          "Type help to show this again.\n"
                          "If you are totally discusted with what you wrote type **!delete** to errace it from the plannet.\n"
+                         "If you encounter any issues please submit them here. https://github.com/Sleuth56/Matrix-Aggregator"
     )
 
   def MKToHTML(self, string):
@@ -34,7 +36,7 @@ class Aggregator_Skill(Skill):
 
   async def send_to_destination_rooms(self, string):
     for i in range(len(self.destination_rooms)):
-      await self.opsdroid.send(Message(string, target='secondary'))
+      await self.opsdroid.send(Message(string, target=self.destination_rooms[i]))
 
   @match_event(UserInvite)
   async def respond_to_invites(self, opsdroid, config, invite):
@@ -55,6 +57,12 @@ class Aggregator_Skill(Skill):
     string = message.regex.group('string')
     if (self.logging == True):
       _LOGGER.info("User Message:" + str(string))
+
+    for i in range(len(self.destination_rooms)):
+      if (self.destination_rooms[i] == message.target):
+        if (self.logging == True):
+          _LOGGER.info("dropping message. Cause: from destination room")
+        return
 
     if ("!delete" in string):
       await opsdroid.memory.delete(message.target)
