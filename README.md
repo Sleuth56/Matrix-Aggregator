@@ -17,7 +17,7 @@
 ## Roadmap
 - [x] Edits
 - [x] Multi-line messages
-- [ ] Aggregating to multiple rooms
+- [x] Aggregating to multiple rooms
 - [ ] Deletions
 - [ ] Breakout !send and !preview into their own matchers
 - [ ] Add more things than just $user said
