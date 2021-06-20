@@ -1,3 +1,4 @@
 .vscode
 container/configuration.yaml
 container/Matrix_cache/*
+container/messages.db

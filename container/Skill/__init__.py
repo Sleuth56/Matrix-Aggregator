@@ -46,11 +46,11 @@ class Aggregator_Skill(Skill):
       _LOGGER.debug(f"Joining room from invite.")
       await invite.respond(JoinRoom())
 
-  @match_regex(r'^!help|help|hi|hello', case_sensitive=False)
+  @match_regex(r'(!help|help|hi|hello)$', case_sensitive=False)
   async def help_menu(self, opsdroid, config, message):
     await message.respond(self.MKToHTML(self.help_message))
 
-  @match_regex(r'(?P<string>^(?!help|!help)((.|\n)*))', case_sensitive=False)
+  @match_regex(r'(?P<string>^(?!help|!help|hi|hello)((.|\n)*))', case_sensitive=False)
   async def process_message(self, opsdroid, config, message):
     if (self.logging == True):
       _LOGGER.info("matched process_message regex!")

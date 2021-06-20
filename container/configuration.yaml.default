@@ -48,4 +48,8 @@ skills:
     nothing_to_send: "I don't have anything to send"
     nothing_to_preview: "Their isn't anything to preview"
     
+databases:
+  sqlite:
+    path: "/root/.config/opsdroid/messages.db"
+
 welcome-message: false
