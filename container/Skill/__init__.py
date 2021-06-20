@@ -2,7 +2,10 @@ from opsdroid.connector.matrix import ConnectorMatrix
 from opsdroid.events import Message, UserInvite, JoinRoom
 from opsdroid.matchers import match_event, match_regex
 from opsdroid.skill import Skill
+import markdown
 import logging
+import re
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -10,32 +13,28 @@ class Aggregator_Skill(Skill):
   def __init__(self, opsdroid, config):
     super().__init__(opsdroid, config)
     self.join_when_invited = config.get("join_when_invited", True)
-    self.logging = False
-    self.deletion_message = "I deleted your entire message."
-    self.sent_successfully_message = "I sent your message!"
-    self.nothing_to_send_message = "I don't have anything to send"
-    self.nothing_to_preview = "Their isn't anything to preview"
-    # self.header_format = f'<h2>{message.user} said </h2>'
-    self.help_message = ("<h2>Matrix Aggregator help</h2>"
+    self.logging = config.get("logging", False)
+    self.deletion_message = config.get("delete_message", "I deleted your entire message.")
+    self.sent_successfully_message = config.get("sent_ack" , "I sent your message!")
+    self.nothing_to_send_message = config.get("nothing_to_send", "I don't have anything to send")
+    self.nothing_to_preview = config.get("nothing_to_preview", "Their isn't anything to preview")
+    self.header_format = config.get("header", "<h2>{user_name} said </h2>")
+    self.help_message = ("## Matrix Aggregator Help\n"
                          "just type your messages as you would usually do. "
-                         "As many as you would like in fact.<br>"
-                         "If you would like to preview what you've written type `!preview`<br>"
-                         "When your ready just type `!send`<br>"
-                         "Type help to show this again.<br>"
-                         "If you are totally discusted with what you wrote type `!delete` to errace it from the plannet.<br>"
+                         "As many as you would like in fact.\n"
+                         "If you would like to preview what you've written type **!preview**\n"
+                         "When your ready just type **!send**\n"
+                         "Type help to show this again.\n"
+                         "If you are totally discusted with what you wrote type **!delete** to errace it from the plannet.\n"
     )
 
-  def MKToHTML(self, content):
-    if ("```" in content):
-      if (self.logging == True):
-        _LOGGER.info(str(content.split("```")[1]))
+  def MKToHTML(self, string):
+    # This is redundant for now. There is a bug where element android doesn't show inline code rn. 
+    return markdown.markdown(string)
 
-
-      code_block = content.split("```")[1].split("```")[0].strip('\n')
-      content = f'{content.split("```")[0]} <pre><code>{code_block}</code></pre> {content.split("```")[2]}'
-
-    return content.replace("\n", "<br>")
-
+  async def send_to_destination_rooms(self, string):
+    for i in range(len(self.destination_rooms)):
+      await self.opsdroid.send(Message(string, target='secondary'))
 
   @match_event(UserInvite)
   async def respond_to_invites(self, opsdroid, config, invite):
@@ -45,7 +44,7 @@ class Aggregator_Skill(Skill):
       _LOGGER.debug(f"Joining room from invite.")
       await invite.respond(JoinRoom())
 
-  @match_regex(r'^!help|help', case_sensitive=False)
+  @match_regex(r'^!help|help|hi|hello', case_sensitive=False)
   async def help_menu(self, opsdroid, config, message):
     await message.respond(self.MKToHTML(self.help_message))
 
@@ -58,12 +57,12 @@ class Aggregator_Skill(Skill):
       _LOGGER.info("User Message:" + str(string))
 
     if ("!delete" in string):
-      await opsdroid.memory.delete(message.raw_event["room_id"])
+      await opsdroid.memory.delete(message.target)
       await message.respond(self.deletion_message)
 
     elif ("!send" in string):
-      output = f'<h2>{message.user} said </h2>'
-      messages = await opsdroid.memory.get(message.raw_event["room_id"])
+      output = self.header_format.format(user_name = message.user)
+      messages = await opsdroid.memory.get(message.target)
       if (not isinstance(messages, dict)):
         await message.respond(self.nothing_to_send_message)
         return
@@ -71,12 +70,12 @@ class Aggregator_Skill(Skill):
       for i in range(len(keys)):
         output += f'{messages[keys[i]]}<br>'
       await message.respond(self.sent_successfully_message)
-      await self.opsdroid.send(Message(output))
-      await opsdroid.memory.delete(message.raw_event["room_id"])
+      await self.send_to_destination_rooms(output)
+      await opsdroid.memory.delete(message.target)
 
     elif ("!preview" in string):
-      output = f'<h2>{message.user} said </h2>'
-      messages = await opsdroid.memory.get(message.raw_event["room_id"])
+      output = self.header_format.format(user_name = message.user)
+      messages = await opsdroid.memory.get(message.target)
       if (not isinstance(messages, dict)):
         await message.respond(self.nothing_to_preview)
         return
@@ -85,16 +84,16 @@ class Aggregator_Skill(Skill):
         output += f'{messages[keys[i]]}<br>'
       await message.respond(output)
 
-    elif (r'help' in string):
+    elif (r'help|!help' in string):
       _LOGGER.info("Bad match help")
 
     else:
       if (self.logging == True):
         _LOGGER.info("Message.get = " + str(message.raw_event))
-        _LOGGER.info("opsdroid.memory.get message.raw_event is currently: " + str(await opsdroid.memory.get(message.raw_event["room_id"])))
+        _LOGGER.info("opsdroid.memory.get message.raw_event is currently: " + str(await opsdroid.memory.get(message.target)))
 
       # Attempts to get the current message state of the room
-      content = await opsdroid.memory.get(message.raw_event["room_id"])
+      content = await opsdroid.memory.get(message.target)
 
       # If this returns none create a new dictionary
       if (content == None or content == ""):
@@ -120,4 +119,4 @@ class Aggregator_Skill(Skill):
         _LOGGER.info(str(content))
 
       # Store the dictionary as the room id
-      await opsdroid.memory.put(message.raw_event["room_id"], content)
+      await opsdroid.memory.put(message.target, content)
