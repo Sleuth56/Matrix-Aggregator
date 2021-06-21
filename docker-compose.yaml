@@ -4,7 +4,7 @@ version: "3.5"
 services:
 
   opsdroid:
-    hostname: ansquestions
+    hostname: matrixaggregator
     image: opsdroid/opsdroid:latest
     restart: unless-stopped
     volumes:

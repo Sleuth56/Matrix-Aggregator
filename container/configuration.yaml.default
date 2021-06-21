@@ -36,7 +36,7 @@ connectors:
     store_path: "/root/.config/opsdroid/Matrix_cache/"
 
 skills:
-  ANSQuestions:
+  Matrix-Aggregator:
     # Use the unique room id the one under advanced in room settings in element. It starts with ! symbol.
     # Use a comma separated list of strings with your room IDs to use multiple destination rooms.
     destination_rooms: [""]
