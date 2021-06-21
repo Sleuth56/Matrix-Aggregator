@@ -40,7 +40,7 @@ skills:
     # Use the unique room id the one under advanced in room settings in element. It starts with ! symbol.
     # Use a comma separated list of strings with your room IDs to use multiple destination rooms.
     destination_rooms: [""]
-    path: /root/.config/opsdroid/Skill/main.py
+    path: /root/.config/opsdroid/Skill/
     logging: False
     header: "<h2>{user_name} said </h2>"
     sent_ack: "I sent your message!"
