@@ -21,12 +21,12 @@ class Aggregator_Skill(Skill):
     self.nothing_to_preview = config.get("nothing_to_preview", "Their isn't anything to preview")
     self.header_format = config.get("header", "<h2>{user_name} said </h2>")
     self.help_message = ("## Matrix Aggregator Help\n"
-                         "just type your messages as you would usually do. "
+                         "Just type your messages as you would usually do. "
                          "As many as you would like in fact.\n"
                          "If you would like to preview what you've written type **!preview**\n"
                          "When your ready just type **!send**\n"
                          "Type help to show this again.\n"
-                         "If you are totally discusted with what you wrote type **!delete** to errace it from the plannet.\n"
+                         "If you are totally disgusted with what you wrote type **!delete** to erase it from the plannet.\n"
                          "If you encounter any issues please submit them here. https://github.com/Sleuth56/Matrix-Aggregator"
     )
 
